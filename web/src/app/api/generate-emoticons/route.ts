@@ -105,15 +105,15 @@ export async function POST(request: NextRequest) {
         const results = await jimengClient.generateEmoticonBatch(subjectDescription, targetKeywords);
 
         emoticons = results.map((result, index) => {
-          const isSuccess = result.imageBase64 && result.imageBase64.length > 0;
+          const isSuccess = result.imageUrl && result.imageUrl.length > 0;
 
           if (isSuccess) {
             successCount++;
             return {
               id: index + 1,
               keyword: result.keyword,
-              imageUrl: result.imageBase64,
-              imageData: result.imageBase64,
+              imageUrl: result.imageUrl, // 直接使用即梦AI的URL
+              imageData: null, // 不再使用base64
               seed: result.seed,
               status: 'success' as const
             };
@@ -122,11 +122,11 @@ export async function POST(request: NextRequest) {
             return {
               id: index + 1,
               keyword: result.keyword,
-              imageUrl: `https://via.placeholder.com/512x512/ff6b6b/white?text=${encodeURIComponent(result.keyword)}`,
+              imageUrl: `https://placehold.co/512x512/ff6b6b/white?text=${encodeURIComponent(result.keyword)}&font=source-han-sans`,
               imageData: null,
               seed: 0,
               status: 'failed' as const,
-              errorMessage: '图片生成失败'
+              errorMessage: result.errorMessage || '图片生成失败'
             };
           }
         });
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
         emoticons = keywords.slice(0, quantity).map((keyword, index) => ({
           id: index + 1,
           keyword,
-          imageUrl: `https://via.placeholder.com/512x512/ff6b6b/white?text=${encodeURIComponent(keyword)}`,
+          imageUrl: `https://placehold.co/512x512/ff6b6b/white?text=${encodeURIComponent(keyword)}&font=source-han-sans`,
           imageData: null,
           seed: 0,
           status: 'failed' as const,
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
       emoticons = keywords.slice(0, quantity).map((keyword, index) => ({
         id: index + 1,
         keyword,
-        imageUrl: `https://via.placeholder.com/512x512/667eea/white?text=${encodeURIComponent(keyword)}`,
+        imageUrl: `https://placehold.co/512x512/667eea/white?text=${encodeURIComponent(keyword)}&font=source-han-sans`,
         imageData: null,
         seed: Math.floor(Math.random() * 1000000),
         status: 'placeholder' as const

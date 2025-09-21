@@ -1,5 +1,6 @@
 // 即梦AI客户端
 import { VolcengineAuth } from './volcengine-auth';
+import { emotionKeywords } from './emotion-keywords';
 
 export interface JimengImageRequest {
   prompt: string;
@@ -50,7 +51,7 @@ export class JimengAIClient {
     const requestBody = {
       req_key: "jimeng_high_aes_general_v21_L", // 服务标识，固定值
       prompt: request.prompt, // 用于生成图像的提示词，中英文均可输入
-      seed: request.num_inference_steps ? Math.floor(Math.random() * 1000000) : -1, // 随机种子，-1表示随机
+      seed: 1244122, // 固定种子值，确保生成结果的一致性
       width: request.width || 512, // 生成图像的宽
       height: request.height || 512, // 生成图像的高
       use_pre_llm: true, // 开启大语言，会对输入的prompt进行优化
@@ -89,7 +90,7 @@ export class JimengAIClient {
   async generateEmoticonBatch(
     subjectDescription: string,
     keywords: string[]
-  ): Promise<{ keyword: string; imageBase64: string; seed: number }[]> {
+  ): Promise<{ keyword: string; imageBase64: string; imageUrl: string; seed: number; errorMessage?: string }[]> {
     const results = [];
 
     for (const keyword of keywords) {
@@ -104,31 +105,22 @@ export class JimengAIClient {
         });
 
         if (response.data?.image_urls && response.data.image_urls.length > 0) {
-          // 下载图片并转换为base64
+          // 直接使用即梦AI返回的图片URL，不再下载转base64
           const imageUrl = response.data.image_urls[0];
-          try {
-            const imageResponse = await fetch(imageUrl);
-            const imageBuffer = await imageResponse.arrayBuffer();
-            const imageBase64 = Buffer.from(imageBuffer).toString('base64');
-            results.push({
-              keyword,
-              imageBase64: `data:image/png;base64,${imageBase64}`,
-              seed: Math.floor(Math.random() * 1000000) // 生成随机种子
-            });
-          } catch (downloadError) {
-            console.warn(`下载图片失败 "${keyword}":`, downloadError);
-            results.push({
-              keyword,
-              imageBase64: '',
-              seed: 0
-            });
-          }
+          results.push({
+            keyword,
+            imageBase64: '', // 保持兼容性，但优先使用URL
+            imageUrl, // 直接使用即梦AI的URL
+            seed: 1244122 // 固定种子值，确保生成结果的一致性
+          });
         } else {
           console.warn(`关键词 "${keyword}" 生成失败，使用占位符`);
           results.push({
             keyword,
-            imageBase64: '', // 空的base64，前端会显示占位符
-            seed: 0
+            imageBase64: '',
+            imageUrl: `https://placehold.co/512x512/ff6b6b/white?text=${encodeURIComponent(keyword)}&font=source-han-sans`,
+            seed: 0,
+            errorMessage: response.message || '图片生成失败'
           });
         }
 
@@ -136,10 +128,27 @@ export class JimengAIClient {
         await new Promise(resolve => setTimeout(resolve, 500));
       } catch (error) {
         console.error(`关键词 "${keyword}" 生成失败:`, error);
+
+        // 解析错误类型
+        let errorMessage = '图片生成失败';
+        if (error instanceof Error) {
+          if (error.message.includes('Post Img Risk Not Pass')) {
+            errorMessage = '内容风控未通过，请尝试更换关键词';
+          } else if (error.message.includes('Rate Limit')) {
+            errorMessage = 'API调用频率过高，请稍后重试';
+          } else if (error.message.includes('401') || error.message.includes('403')) {
+            errorMessage = 'API认证失败，请检查配置';
+          } else {
+            errorMessage = error.message;
+          }
+        }
+
         results.push({
           keyword,
           imageBase64: '',
-          seed: 0
+          imageUrl: `https://placehold.co/512x512/ff6b6b/white?text=${encodeURIComponent(keyword)}&font=source-han-sans`,
+          seed: 0,
+          errorMessage
         });
       }
     }
@@ -148,13 +157,28 @@ export class JimengAIClient {
   }
 
   private buildEmoticonPrompt(subjectDescription: string, keyword: string): string {
-    // 构建优化的prompt，使用更友好的表达方式
-    const basePrompt = `${subjectDescription}做出${keyword}的可爱表情`;
-    const stylePrompt = '卡通动画风格, 萌系设计, 简洁背景';
-    const qualityPrompt = '高品质插画, 色彩鲜明, 细节精美';
-    const restrictionPrompt = '纯图像设计, 表情符号风格';
+    // 在关键词数据库中查找对应的详细描述
+    const keywordData = emotionKeywords.find(k => k.keyword === keyword);
 
-    return `${basePrompt}, ${stylePrompt}, ${qualityPrompt}, ${restrictionPrompt}`;
+    if (keywordData) {
+      // 如果找到了详细描述，使用它来构建更准确的prompt
+      const detailedDescription = keywordData.description
+        .replace(/\[主体\]/g, subjectDescription);
+
+      const stylePrompt = '卡通动画风格, 萌系设计, 简洁背景';
+      const qualityPrompt = '高品质插画, 色彩鲜明, 细节精美';
+      const restrictionPrompt = '纯图像设计, 表情符号风格';
+
+      return `${detailedDescription}, ${stylePrompt}, ${qualityPrompt}, ${restrictionPrompt}`;
+    } else {
+      // 如果没有找到详细描述，使用原来的简单方式
+      const basePrompt = `${subjectDescription}做出${keyword}的可爱表情`;
+      const stylePrompt = '卡通动画风格, 萌系设计, 简洁背景';
+      const qualityPrompt = '高品质插画, 色彩鲜明, 细节精美';
+      const restrictionPrompt = '纯图像设计, 表情符号风格';
+
+      return `${basePrompt}, ${stylePrompt}, ${qualityPrompt}, ${restrictionPrompt}`;
+    }
   }
 }
 
