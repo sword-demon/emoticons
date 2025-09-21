@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Settings, TestTube, CheckCircle, XCircle, AlertTriangle, Home } from 'lucide-react';
 import Link from 'next/link';
@@ -15,10 +14,17 @@ interface APIConfig {
   configComplete: boolean;
 }
 
+interface TestResultData {
+  requestId: string;
+  imageCount: number;
+  hasImage: boolean;
+  prompt: string;
+}
+
 interface TestResult {
   success: boolean;
   message: string;
-  data?: any;
+  data?: TestResultData;
   error?: string;
 }
 

@@ -85,6 +85,7 @@ export class ImageProcessor {
         img.crossOrigin = 'anonymous';
         img.src = imageUrl;
       } catch (error) {
+        console.error('Error checking image accessibility:', error);
         resolve(false);
       }
     });

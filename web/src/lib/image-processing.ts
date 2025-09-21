@@ -83,8 +83,8 @@ export async function addWatermark(
           ctx.restore();
 
           resolve(canvas.toDataURL('image/png'));
-        } catch (canvasError) {
-          console.warn('Canvas processing fallback triggered');
+        } catch (error) {
+          console.warn('Canvas processing fallback triggered, error:', error);
           resolve(imageUrl); // 回退到原图
         }
       };
@@ -165,7 +165,7 @@ export async function addTextOverlay(
           const textWidth = textMetrics.width;
           const textHeight = fontSize;
 
-          let x = (canvas.width - textWidth) / 2;
+          const x = (canvas.width - textWidth) / 2;
           let y: number;
 
           switch (position) {
@@ -198,8 +198,8 @@ export async function addTextOverlay(
           ctx.fillText(text, canvas.width / 2, y - textHeight / 2);
 
           resolve(canvas.toDataURL('image/png'));
-        } catch (canvasError) {
-          console.warn('Canvas text overlay fallback triggered');
+        } catch (error) {
+          console.warn('Canvas text overlay fallback triggered, error:', error);
           resolve(imageUrl); // 回退到原图
         }
       };
@@ -283,8 +283,8 @@ export async function resizeImage(
           ctx.drawImage(img, offsetX, offsetY, targetWidth, targetHeight);
 
           resolve(canvas.toDataURL('image/png'));
-        } catch (canvasError) {
-          console.warn('Canvas resize fallback triggered');
+        } catch (error) {
+          console.warn('Canvas resize fallback triggered, error:', error);
           resolve(imageUrl); // 回退到原图
         }
       };
@@ -367,7 +367,7 @@ export async function processEmoticon(
       icon
     };
   } catch (error) {
-    console.warn(`处理表情包 "${keyword}" 时使用占位符`);
+    console.warn(`处理表情包 "${keyword}" 时使用占位符, error:`, error);
 
     // 使用Canvas生成的占位符，避免网络请求
     const safeKeyword = keyword || '错误';

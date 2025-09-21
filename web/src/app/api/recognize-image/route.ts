@@ -28,10 +28,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Convert file to base64 for API call
+    // Validate file format (currently unused in mock implementation)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const base64Image = buffer.toString('base64');
 
     // Here we would integrate with image recognition AI service
     // For now, simulate the API call with a delay and mock response

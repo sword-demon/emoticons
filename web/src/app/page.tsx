@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -285,7 +286,7 @@ export default function Home() {
                   表情包主体描述
                 </label>
                 <p className="text-sm text-gray-600 mb-4">
-                  请尽可能具体地描述表情包主角的及其主要特征，例如'一只戴着眼镜的黄色柴犬'，这将影响AI生成的基础形象
+                  请尽可能具体地描述表情包主角的及其主要特征，例如&apos;一只戴着眼镜的黄色柴犬&apos;，这将影响AI生成的基础形象
                 </p>
 
                 {/* Image Upload and Inspiration */}
@@ -316,12 +317,12 @@ export default function Home() {
                     />
                     {previewImage && (
                       <div className="w-16 h-16 rounded-lg overflow-hidden border-2 border-gray-300">
-                        <img src={previewImage} className="w-full h-full object-cover" alt="预览图" />
+                        <Image src={previewImage} className="w-full h-full object-cover" alt="预览图" width={64} height={64} />
                       </div>
                     )}
                   </div>
                   <p className="text-xs text-gray-500 mt-2">
-                    支持JPG/PNG格式，文件大小不超过5MB，或点击"需要灵感?"让AI为您推荐有趣的角色
+                    支持JPG/PNG格式，文件大小不超过5MB，或点击&quot;需要灵感?&quot;让AI为您推荐有趣的角色
                   </p>
                 </div>
 
@@ -355,7 +356,7 @@ export default function Home() {
                   16个关键词描述
                 </label>
                 <p className="text-sm text-gray-600 mb-4">
-                  请填写与表情包情感或动作相关的词语，例如'开心大笑'、'思考人生'、'震惊的说不出话'。请避免使用过于抽象或复杂的词语，确保每个词语都能清晰表达一种情绪或动作。
+                  请填写与表情包情感或动作相关的词语，例如&apos;开心大笑&apos;、&apos;思考人生&apos;、&apos;震惊的说不出话&apos;。请避免使用过于抽象或复杂的词语，确保每个词语都能清晰表达一种情绪或动作。
                 </p>
 
                 {/* Keywords Grid */}
@@ -496,10 +497,12 @@ export default function Home() {
                   {generatedEmoticons.map((emoticon) => (
                     <div key={emoticon.id} className="text-center">
                       <div className="relative mb-2 watermark">
-                        <img
+                        <Image
                           src={emoticon.imageUrl}
                           alt={emoticon.keyword}
                           className="w-full aspect-square object-cover rounded-lg border"
+                          width={200}
+                          height={200}
                         />
                         <div className="absolute inset-0 flex items-center justify-center">
                           <span className="text-white text-lg font-bold opacity-80 transform rotate-45 select-none">

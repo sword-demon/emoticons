@@ -112,7 +112,8 @@ export class VolcengineAuth {
           /[*]/g,
           (ch) => `%${ch.charCodeAt(0).toString(16).toUpperCase()}`
         );
-    } catch (e) {
+    } catch (error) {
+      console.error('URI escape error:', error);
       return '';
     }
   }
@@ -198,7 +199,7 @@ export class VolcengineAuth {
     };
   }
 
-  async makeRequest(request: APIRequest): Promise<any> {
+  async makeRequest(request: APIRequest): Promise<unknown> {
     const signedHeaders = this.generateSignature(request);
 
     // 调试信息：检查headers中是否有无效字符

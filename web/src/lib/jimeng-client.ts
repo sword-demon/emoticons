@@ -79,7 +79,7 @@ export class JimengAIClient {
 
     try {
       const response = await this.auth.makeRequest(apiRequest);
-      return response;
+      return response as JimengImageResponse;
     } catch (error) {
       console.error('即梦AI图像生成失败:', error);
       throw new Error(`图像生成失败: ${error instanceof Error ? error.message : '未知错误'}`);
