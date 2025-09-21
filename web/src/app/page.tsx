@@ -540,7 +540,7 @@ export default function Home() {
                             无解
                           </span>
                         </div>
-                        <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-10 rounded-lg transition-all duration-200 flex items-center justify-center">
+                        <div className="absolute inset-0 rounded-lg transition-all duration-200 flex items-center justify-center">{/* 移除所有背景色，只保留eye图标显示 */}
                           <Eye className="w-6 h-6 text-white opacity-0 hover:opacity-100 transition-opacity duration-200" />
                         </div>
                       </div>
