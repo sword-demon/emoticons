@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI表情包生成器 - V3.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#f59e0b',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .watermark {
+            position: relative;
+            overflow: hidden;
+        }
+        .watermark::after {
+            content: '预览';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 2rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            z-index: 10;
+        }
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #6366f1;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="gradient-bg text-white py-6 shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold mb-2">
+                    <i class="fas fa-smile mr-3"></i>
+                    AI表情包生成器
+                </h1>
+                <p class="text-lg opacity-90">V3.0 - 智能图片识别，一键生成专属表情包</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 container mx-auto px-4 py-8">
+        <div class="max-w-6xl mx-auto">
+            <!-- Input Section -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-edit text-primary mr-2"></i>
+                    创建你的表情包
+                </h2>
+
+                <!-- Subject Description Section -->
+                <div class="mb-8">
+                    <label class="block text-lg font-semibold text-gray-700 mb-3">
+                        表情包主体描述
+                    </label>
+                    <p class="text-sm text-gray-600 mb-4">
+                        请尽可能具体地描述表情包主角的及其主要特征，例如'一只戴着眼镜的黄色柴犬'，这将影响AI生成的基础形象
+                    </p>
+
+                    <!-- Image Upload for Recognition -->
+                    <div class="mb-4">
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <button id="uploadImageBtn" class="flex items-center justify-center px-4 py-2 bg-secondary text-white rounded-lg hover:bg-yellow-600 transition-colors">
+                                <i class="fas fa-upload mr-2"></i>
+                                上传图片识别主体
+                            </button>
+                            <button id="inspirationBtn" class="flex items-center justify-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors">
+                                <i class="fas fa-lightbulb mr-2"></i>
+                                需要灵感?
+                            </button>
+                            <input type="file" id="imageInput" class="hidden" accept="image/*">
+                            <div id="imagePreview" class="hidden w-16 h-16 rounded-lg overflow-hidden border-2 border-gray-300">
+                                <img id="previewImg" class="w-full h-full object-cover" alt="预览图">
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">
+                            支持JPG/PNG格式，文件大小不超过5MB，或点击"需要灵感?"让AI为您推荐有趣的角色
+                        </p>
+                    </div>
+
+                    <!-- Text Input -->
+                    <div class="relative">
+                        <textarea
+                            id="subjectInput"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                            rows="3"
+                            maxlength="50"
+                            placeholder="例如：简单背景，穿着黑色短袖的男人 (或上传图片试试)"
+                        ></textarea>
+                        <div class="absolute bottom-3 right-3 text-xs text-gray-400">
+                            <span id="subjectCharCount">0</span>/50
+                        </div>
+                        <div id="recognitionLoading" class="hidden absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center rounded-lg">
+                            <div class="flex items-center">
+                                <div class="loading-spinner mr-3"></div>
+                                <span class="text-gray-600">AI正在识别图片...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Keywords Section -->
+                <div class="mb-8">
+                    <label class="block text-lg font-semibold text-gray-700 mb-3">
+                        16个关键词描述
+                    </label>
+                    <p class="text-sm text-gray-600 mb-4">
+                        请填写与表情包情感或动作相关的词语，例如'开心大笑'、'思考人生'、'震惊的说不出话'。请避免使用过于抽象或复杂的词语，确保每个词语都能清晰表达一种情绪或动作。
+                    </p>
+
+                    <!-- Keywords Input Grid -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                        <!-- Keywords will be generated by JavaScript -->
+                    </div>
+
+                    <!-- Quick Fill Options -->
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="text-sm text-gray-600 mr-2">快速填充：</span>
+                        <button class="quick-fill-btn px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors" data-theme="daily">
+                            日常聊天
+                        </button>
+                        <button class="quick-fill-btn px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors" data-theme="work">
+                            职场吐槽
+                        </button>
+                        <button class="quick-fill-btn px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors" data-theme="funny">
+                            搞笑幽默
+                        </button>
+                        <button class="quick-fill-btn px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors" data-theme="emotion">
+                            情感表达
+                        </button>
+                        <button id="randomFillBtn" class="px-3 py-1 bg-purple-500 text-white rounded-full text-sm hover:bg-purple-600 transition-colors">
+                            <i class="fas fa-dice mr-1"></i>随机填充关键词
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Generate Button -->
+                <div class="text-center">
+                    <button
+                        id="generateBtn"
+                        class="px-8 py-3 bg-primary text-white text-lg font-semibold rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <i class="fas fa-magic mr-2"></i>
+                        生成预览图
+                    </button>
+                    <div id="generateLoading" class="hidden mt-4 flex items-center justify-center">
+                        <div class="loading-spinner mr-3"></div>
+                        <span class="text-gray-600">AI正在生成表情包，请稍候...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview Section -->
+            <div id="previewSection" class="hidden bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-eye text-primary mr-2"></i>
+                    预览效果
+                </h2>
+
+                <!-- Preview Grid -->
+                <div id="previewGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 mb-6">
+                    <!-- Preview images will be generated by JavaScript -->
+                </div>
+
+                <div class="text-center text-sm text-gray-500 mb-6">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    以上为带水印预览图，下载时可选择免费水印版或付费无水印版
+                </div>
+            </div>
+
+            <!-- Download Section -->
+            <div id="downloadSection" class="hidden bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-download text-primary mr-2"></i>
+                    下载选项
+                </h2>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Free Download -->
+                    <div class="border border-gray-200 rounded-lg p-6 text-center">
+                        <div class="text-4xl text-gray-400 mb-4">
+                            <i class="fas fa-gift"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">免费下载</h3>
+                        <p class="text-gray-600 mb-4">包含水印的预览版本</p>
+                        <div class="text-2xl font-bold text-green-600 mb-4">免费</div>
+                        <button id="freeDownloadBtn" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                            <i class="fas fa-download mr-2"></i>
+                            下载水印版ZIP
+                        </button>
+                    </div>
+
+                    <!-- Paid Download -->
+                    <div class="border border-primary rounded-lg p-6 text-center bg-gradient-to-br from-blue-50 to-indigo-50">
+                        <div class="text-4xl text-primary mb-4">
+                            <i class="fas fa-crown"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">高清无水印</h3>
+                        <p class="text-gray-600 mb-4">专业品质，直接可用</p>
+                        <div class="text-2xl font-bold text-primary mb-4">￥9.9</div>
+                        <button id="paidDownloadBtn" class="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                            <i class="fas fa-credit-card mr-2"></i>
+                            支付解锁无水印版
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Modal -->
+            <div id="paymentModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white rounded-lg p-6 max-w-md w-mx-4">
+                    <div class="text-center">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">完成支付</h3>
+                        <div class="w-48 h-48 bg-gray-100 mx-auto mb-4 rounded-lg flex items-center justify-center">
+                            <div class="text-gray-400">
+                                <i class="fas fa-qrcode text-6xl"></i>
+                                <p class="text-sm mt-2">支付二维码</p>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 mb-4">请使用微信/支付宝扫码支付</p>
+                        <div class="text-xl font-bold text-primary mb-6">￥9.9</div>
+                        <div class="flex gap-3">
+                            <button id="cancelPayment" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                                取消
+                            </button>
+                            <button id="checkPayment" class="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                                检查支付状态
+                            </button>
+                        </div>
+                        <div id="paymentStatus" class="mt-4 text-sm text-gray-500">
+                            等待支付中...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features Hero Section -->
+            <div class="mt-12 mb-8">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-4">选择适合您的版本</h2>
+                    <p class="text-gray-600 text-lg">我们提供免费和付费两种选择，满足不同需求</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                    <!-- 免费版卡片 -->
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                        <div class="relative">
+                            <div class="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-xl font-bold text-white">免费版本</h3>
+                                    <div class="bg-white bg-opacity-20 px-3 py-1 rounded-full">
+                                        <span class="text-white text-sm font-semibold">￥0</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                <div class="mb-6">
+                                    <div class="relative w-full h-32 bg-gray-100 rounded-lg mb-4 overflow-hidden">
+                                        <img src="https://picsum.photos/200/200?random=watermark" alt="带水印预览" class="w-full h-full object-cover">
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <span class="transform rotate-12 text-white text-lg font-bold bg-black bg-opacity-50 px-3 py-1 rounded">预览</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-sm text-gray-600 text-center">带水印版本示例</p>
+                                </div>
+
+                                <ul class="space-y-3 mb-6">
+                                    <li class="flex items-center">
+                                        <i class="fas fa-check text-green-500 mr-3"></i>
+                                        <span class="text-gray-700">16张表情包图片</span>
+                                    </li>
+                                    <li class="flex items-center">
+                                        <i class="fas fa-check text-green-500 mr-3"></i>
+                                        <span class="text-gray-700">标准240x240尺寸</span>
+                                    </li>
+                                    <li class="flex items-center">
+                                        <i class="fas fa-times text-red-500 mr-3"></i>
+                                        <span class="text-gray-700">包含水印标识</span>
+                                    </li>
+                                    <li class="flex items-center">
+                                        <i class="fas fa-check text-green-500 mr-3"></i>
+                                        <span class="text-gray-700">即时下载ZIP</span>
+                                    </li>
+                                </ul>
+
+                                <div class="text-center">
+                                    <p class="text-sm text-gray-500 mb-3">适合个人试用和预览效果</p>
+                                    <button class="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors">
+                                        免费下载
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 付费版卡片 -->
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 border-2 border-primary">
+                        <div class="relative">
+                            <div class="bg-gradient-to-r from-primary to-indigo-700 px-6 py-4">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-xl font-bold text-white">高清无水印</h3>
+                                    <div class="bg-white bg-opacity-20 px-3 py-1 rounded-full">
+                                        <span class="text-white text-sm font-semibold">￥9.9</span>
+                                    </div>
+                                </div>
+                                <div class="absolute -top-1 -right-1">
+                                    <div class="bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-bl-lg">
+                                        推荐
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                <div class="mb-6">
+                                    <div class="relative w-full h-32 bg-gray-100 rounded-lg mb-4 overflow-hidden">
+                                        <img src="https://picsum.photos/200/200?random=clean" alt="无水印预览" class="w-full h-full object-cover">
+                                        <div class="absolute top-2 right-2">
+                                            <div class="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                                                <i class="fas fa-crown mr-1"></i>高清
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p class="text-sm text-gray-600 text-center">高清无水印版本</p>
+                                </div>
+
+                                <ul class="space-y-3 mb-6">
+                                    <li class="flex items-center">
+                                        <i class="fas fa-check text-primary mr-3"></i>
+                                        <span class="text-gray-700">16张高清表情包</span>
+                                    </li>
+                                    <li class="flex items-center">
+                                        <i class="fas fa-check text-primary mr-3"></i>
+                                        <span class="text-gray-700">多种尺寸规格</span>
+                                    </li>
+                                    <li class="flex items-center">
+                                        <i class="fas fa-check text-primary mr-3"></i>
+                                        <span class="text-gray-700 font-semibold">完全无水印</span>
+                                    </li>
+                                    <li class="flex items-center">
+                                        <i class="fas fa-check text-primary mr-3"></i>
+                                        <span class="text-gray-700">微信规范格式</span>
+                                    </li>
+                                    <li class="flex items-center">
+                                        <i class="fas fa-crown text-yellow-500 mr-3"></i>
+                                        <span class="text-gray-700">商用授权</span>
+                                    </li>
+                                </ul>
+
+                                <div class="text-center">
+                                    <p class="text-sm text-gray-500 mb-3">专业创作者和商用首选</p>
+                                    <button class="w-full bg-primary text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
+                                        立即购买
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 额外说明 -->
+                <div class="mt-8 text-center">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-2xl mx-auto">
+                        <div class="flex items-center justify-center mb-3">
+                            <i class="fas fa-info-circle text-blue-500 text-xl mr-2"></i>
+                            <h4 class="text-lg font-semibold text-blue-800">购买说明</h4>
+                        </div>
+                        <div class="text-blue-700 space-y-1 text-sm">
+                            <p>• 支付成功后立即获得无水印高清版本</p>
+                            <p>• 支持微信、支付宝等多种支付方式</p>
+                            <p>• 一次购买，永久使用，支持重复下载</p>
+                            <p>• 如有问题，请联系客服获得帮助</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-400">© 2025 AI表情包生成器 - 让创意无限可能</p>
+            <div class="mt-4 flex justify-center space-x-4">
+                <i class="fab fa-weixin text-2xl text-green-500"></i>
+                <i class="fab fa-qq text-2xl text-blue-500"></i>
+                <i class="fab fa-weibo text-2xl text-red-500"></i>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

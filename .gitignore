@@ -1,0 +1,323 @@
+# ====================================
+# AI表情包生成器项目 - 全局 .gitignore
+# ====================================
+
+# ==================
+# 操作系统文件
+# ==================
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ==================
+# Node.js / npm
+# ==================
+# 依赖目录
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# 运行时数据
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+lib-cov
+coverage
+*.lcov
+.nyc_output
+
+# Grunt intermediate storage
+.grunt
+
+# Bower dependency directory
+bower_components
+
+# node-waf configuration
+.lock-wscript
+
+# Compiled binary addons
+build/Release
+
+# 包管理器相关
+.npm
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+.pnp.*
+.yarn-integrity
+
+# ==================
+# Next.js
+# ==================
+.next/
+out/
+build/
+dist/
+
+# Next.js build info
+.next/
+next-env.d.ts
+
+# Vercel
+.vercel
+
+# ==================
+# TypeScript
+# ==================
+*.tsbuildinfo
+*.tsc
+
+# ==================
+# 环境变量和配置
+# ==================
+# 环境变量文件
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# API密钥和敏感信息
+.env.*.local
+secrets.json
+config/local.json
+
+# ==================
+# 开发工具
+# ==================
+# IDE和编辑器
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+
+# ==================
+# 日志文件
+# ==================
+logs
+*.log
+log/
+
+# ==================
+# 临时文件
+# ==================
+tmp/
+temp/
+*.tmp
+*.temp
+
+# ==================
+# 测试相关
+# ==================
+# 测试覆盖率
+coverage/
+.nyc_output/
+junit.xml
+
+# Jest
+jest-coverage/
+
+# ==================
+# 部署和打包
+# ==================
+# 生产构建
+build/
+dist/
+public/build/
+
+# 静态文件生成
+static/
+.cache/
+
+# ==================
+# 数据库
+# ==================
+*.db
+*.sqlite
+*.sqlite3
+
+# ==================
+# 文档生成
+# ==================
+docs/build/
+.docusaurus/
+
+# ==================
+# AI/ML 相关
+# ==================
+# 模型文件
+*.model
+*.pkl
+*.h5
+*.pb
+
+# 数据集
+datasets/
+data/
+*.csv
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+
+# ==================
+# 图片和媒体文件
+# ==================
+# 大型图片文件（保留必要的示例图片）
+*.psd
+*.ai
+*.sketch
+
+# 生成的图片缓存
+.image-cache/
+generated-images/
+temp-images/
+
+# ==================
+# 安全和证书
+# ==================
+# SSL证书
+*.pem
+*.key
+*.crt
+*.cert
+
+# SSH密钥
+id_rsa
+id_dsa
+*.pub
+
+# ==================
+# 依赖和包管理
+# ==================
+# Yarn
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# pnpm
+.pnpm-store/
+
+# ==================
+# 云服务相关
+# ==================
+# AWS
+.aws/
+
+# Google Cloud
+.gcloud/
+
+# Azure
+.azure/
+
+# ==================
+# 监控和分析
+# ==================
+# Sentry
+.sentryclirc
+
+# 性能分析
+.clinic/
+profile/
+
+# ==================
+# 项目特定文件
+# ==================
+# 用户上传的文件
+uploads/
+user-data/
+
+# 缓存目录
+.cache/
+cache/
+
+# 临时生成的表情包
+temp-emoticons/
+generated/
+
+# API响应缓存
+.api-cache/
+
+# ==================
+# 备份文件
+# ==================
+*.bak
+*.backup
+*.old
+*.orig
+
+# ==================
+# 压缩文件
+# ==================
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# ==================
+# 开发环境特定
+# ==================
+# Local development
+.local/
+local/
+
+# 实验性功能
+experimental/
+sandbox/
+
+# 注释: 如果需要提交某些被忽略的文件，可以使用：
+# git add -f <filename>
