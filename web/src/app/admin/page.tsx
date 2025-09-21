@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Settings, TestTube, CheckCircle, XCircle, AlertTriangle, Home } from 'lucide-react';
+import { Settings, CheckCircle, XCircle, AlertTriangle, Home } from 'lucide-react';
 import Link from 'next/link';
 
 interface APIConfig {
@@ -14,25 +13,8 @@ interface APIConfig {
   configComplete: boolean;
 }
 
-interface TestResultData {
-  requestId: string;
-  imageCount: number;
-  hasImage: boolean;
-  prompt: string;
-}
-
-interface TestResult {
-  success: boolean;
-  message: string;
-  data?: TestResultData;
-  error?: string;
-}
-
 export default function AdminPage() {
   const [config, setConfig] = useState<APIConfig | null>(null);
-  const [testResult, setTestResult] = useState<TestResult | null>(null);
-  const [isTestingAPI, setIsTestingAPI] = useState(false);
-  const [testPrompt, setTestPrompt] = useState('一只戴着眼镜的可爱柴犬，开心表情');
 
   useEffect(() => {
     fetchConfig();
@@ -45,32 +27,6 @@ export default function AdminPage() {
       setConfig(data.config);
     } catch (error) {
       console.error('获取配置失败:', error);
-    }
-  };
-
-  const testJimengAPI = async () => {
-    setIsTestingAPI(true);
-    setTestResult(null);
-
-    try {
-      const response = await fetch('/api/test-jimeng', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prompt: testPrompt }),
-      });
-
-      const result = await response.json();
-      setTestResult(result);
-    } catch (error) {
-      setTestResult({
-        success: false,
-        message: '测试请求失败',
-        error: error instanceof Error ? error.message : '未知错误'
-      });
-    } finally {
-      setIsTestingAPI(false);
     }
   };
 
@@ -155,88 +111,6 @@ export default function AdminPage() {
           </CardContent>
         </Card>
 
-        {/* API Test */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TestTube className="w-5 h-5" />
-              即梦AI测试
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  测试Prompt
-                </label>
-                <Textarea
-                  value={testPrompt}
-                  onChange={(e) => setTestPrompt(e.target.value)}
-                  placeholder="输入测试用的图片描述..."
-                  rows={3}
-                />
-              </div>
-
-              <Button
-                onClick={testJimengAPI}
-                disabled={isTestingAPI || !config?.configComplete}
-                className="w-full flex items-center gap-2"
-              >
-                {isTestingAPI ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    测试中...
-                  </>
-                ) : (
-                  <>
-                    <TestTube className="w-4 h-4" />
-                    测试即梦AI API
-                  </>
-                )}
-              </Button>
-
-              {testResult && (
-                <div className={`p-4 rounded-lg border ${
-                  testResult.success
-                    ? 'bg-green-50 border-green-200'
-                    : 'bg-red-50 border-red-200'
-                }`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    {testResult.success ? (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                    ) : (
-                      <XCircle className="w-5 h-5 text-red-600" />
-                    )}
-                    <span className={`font-medium ${
-                      testResult.success ? 'text-green-800' : 'text-red-800'
-                    }`}>
-                      {testResult.message}
-                    </span>
-                  </div>
-
-                  {testResult.success && testResult.data && (
-                    <div className="text-sm text-green-700 space-y-1">
-                      <p>• 请求ID: {testResult.data.requestId}</p>
-                      <p>• 生成图片数量: {testResult.data.imageCount}</p>
-                      <p>• 包含图片数据: {testResult.data.hasImage ? '是' : '否'}</p>
-                      <p>• 测试Prompt: {testResult.data.prompt}</p>
-                    </div>
-                  )}
-
-                  {!testResult.success && testResult.error && (
-                    <div className="text-sm text-red-700 mt-2">
-                      <p className="font-medium">错误详情:</p>
-                      <code className="block mt-1 p-2 bg-red-100 rounded text-xs">
-                        {testResult.error}
-                      </code>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Environment Variables Guide */}
         <Card>
           <CardHeader>
@@ -260,13 +134,6 @@ export default function AdminPage() {
                   <li>• <strong>真实模式</strong>: USE_REAL_JIMENG_API=true，调用即梦AI生成真实图片</li>
                   <li>• <strong>回退机制</strong>: 即使在真实模式下，API失败时会自动回退到演示模式</li>
                 </ul>
-              </div>
-
-              <div>
-                <h4 className="font-medium text-gray-800 mb-2">密钥格式</h4>
-                <p className="text-sm text-gray-600">
-                  当前密钥采用Base64编码格式存储，系统会自动解码后使用。
-                </p>
               </div>
             </div>
           </CardContent>
