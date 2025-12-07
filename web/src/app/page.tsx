@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Upload, Lightbulb, Eye, Sparkles, Download, Crown, Settings, ChevronLeft, ChevronRight, X, AlertTriangle, Circle } from 'lucide-react';
+import { Upload, Lightbulb, Eye, Sparkles, Download, Crown, Settings, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { processEmoticon, ProcessedEmoticon } from '@/lib/image-processing';
 import { downloadWatermarkedPackage, downloadPremiumPackageProcessed } from '@/lib/download';
 import { downloadSimplePackage } from '@/lib/download-simple';
@@ -344,44 +344,6 @@ export default function Home() {
           </div>
         </div>
       </header>
-
-      {/* TODO List and Warning */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200">
-        <div className="container mx-auto px-4 py-4">
-          <div className="max-w-4xl mx-auto">
-            {/* TODO List */}
-            <div className="bg-white rounded-lg shadow-sm border border-blue-200 p-4 mb-4">
-              <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <Circle className="w-5 h-5 text-blue-500" />
-                开发进度 TODO
-              </h2>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <Circle className="w-4 h-4 text-orange-500" />
-                  <span className="text-gray-700">表情包上传主体识别未实现</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Circle className="w-4 h-4 text-orange-500" />
-                  <span className="text-gray-700">未接入支付API</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Warning */}
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
-                <div>
-                  <p className="text-amber-800 font-medium">重要提醒</p>
-                  <p className="text-amber-700 text-sm">
-                    网站已对接即梦文生图模型，调用接口会付费，请调用频率低一点
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
