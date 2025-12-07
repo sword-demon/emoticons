@@ -6,11 +6,19 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { prompt = '一只可爱的柴犬，开心表情' } = body;
 
+    // 从请求头获取用户自定义的 API 密钥
+    const customAccessKeyId = request.headers.get('X-Access-Key-Id'); // 用户自定义 Access Key
+    const customSecretAccessKey = request.headers.get('X-Secret-Access-Key'); // 用户自定义 Secret Key
+
     console.log('🧪 测试即梦AI API...');
     console.log('测试prompt:', prompt);
+    console.log('使用自定义密钥:', !!(customAccessKeyId && customSecretAccessKey));
 
-    // 尝试创建客户端
-    const client = createJimengClient();
+    // 尝试创建客户端，优先使用用户自定义密钥
+    const client = createJimengClient({
+      accessKeyId: customAccessKeyId || undefined, // 传递用户自定义 Access Key
+      secretAccessKey: customSecretAccessKey || undefined // 传递用户自定义 Secret Key
+    });
     console.log('✅ 即梦AI客户端创建成功');
 
     // 尝试生成单张图片

@@ -13,9 +13,34 @@ import KeywordSelector from '@/components/KeywordSelector';
 import Link from 'next/link';
 
 interface GeneratedEmoticon {
-  id: number;
-  keyword: string;
-  imageUrl: string;
+  id: number; // 表情包 ID
+  keyword: string; // 关键词
+  imageUrl: string; // 图片 URL
+}
+
+// 用户自定义配置接口
+interface UserAPIConfig {
+  accessKeyId: string; // 火山引擎 Access Key ID
+  secretAccessKey: string; // 火山引擎 Secret Access Key
+  useRealAPI: boolean; // 是否使用真实 API
+}
+
+// localStorage 存储的 key
+const CONFIG_STORAGE_KEY = 'jimeng_api_config';
+
+// 从 localStorage 获取用户配置
+function getUserAPIConfig(): UserAPIConfig | null {
+  if (typeof window === 'undefined') return null; // SSR 环境下返回 null
+  
+  try {
+    const savedConfig = localStorage.getItem(CONFIG_STORAGE_KEY); // 读取存储的配置
+    if (savedConfig) {
+      return JSON.parse(savedConfig) as UserAPIConfig; // 解析 JSON
+    }
+  } catch (error) {
+    console.error('读取用户配置失败:', error); // 记录错误日志
+  }
+  return null;
 }
 
 export default function Home() {
@@ -165,12 +190,25 @@ export default function Home() {
 
     setIsGenerating(true);
     try {
+      // 获取用户配置
+      const userConfig = getUserAPIConfig();
+      
+      // 构建请求头
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      // 如果用户配置了自定义 API 密钥，添加到请求头
+      if (userConfig?.accessKeyId && userConfig?.secretAccessKey && userConfig?.useRealAPI) {
+        headers['X-Access-Key-Id'] = userConfig.accessKeyId; // 添加用户自定义 Access Key
+        headers['X-Secret-Access-Key'] = userConfig.secretAccessKey; // 添加用户自定义 Secret Key
+        console.log('🔑 使用用户自定义 API 密钥');
+      }
+
       // Call generate emoticons API
       const response = await fetch('/api/generate-emoticons', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           subjectDescription,
           keywords: selectedKeywords,
@@ -185,8 +223,10 @@ export default function Home() {
         // 显示API模式和警告信息
         if (result.warning) {
           alert(`⚠️ ${result.warning}`);
-        } else if (result.apiMode) {
-          console.log(`🤖 API模式: ${result.apiMode === 'real' ? '真实即梦AI' : '演示模式'}`);
+        } else if (result.metadata?.apiMode) {
+          const modeText = result.metadata.apiMode === 'real' ? '真实即梦AI' : '演示模式';
+          const keySource = result.metadata.usingCustomKeys ? '(自定义密钥)' : '(服务器密钥)';
+          console.log(`🤖 API模式: ${modeText} ${result.metadata.usingCustomKeys ? keySource : ''}`);
         }
 
         // Process emoticons for download

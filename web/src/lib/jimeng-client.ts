@@ -182,22 +182,38 @@ export class JimengAIClient {
   }
 }
 
-// 工厂函数创建客户端实例
-export function createJimengClient(): JimengAIClient {
-  const accessKeyId = process.env.ACCESS_KEY_ID;
-  const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+// 客户端配置接口
+export interface JimengClientConfig {
+  accessKeyId?: string; // 用户自定义的 Access Key ID
+  secretAccessKey?: string; // 用户自定义的 Secret Access Key
+}
 
+// 工厂函数创建客户端实例
+// 优先使用传入的配置，其次使用环境变量
+export function createJimengClient(config?: JimengClientConfig): JimengAIClient {
+  // 优先使用传入的配置
+  let accessKeyId = config?.accessKeyId;
+  let secretAccessKey = config?.secretAccessKey;
+
+  // 如果传入的配置为空，则使用环境变量
   if (!accessKeyId || !secretAccessKey) {
-    throw new Error('缺少即梦AI认证信息，请检查环境变量 ACCESS_KEY_ID 和 SECRET_ACCESS_KEY');
+    accessKeyId = process.env.ACCESS_KEY_ID;
+    secretAccessKey = process.env.SECRET_ACCESS_KEY;
   }
 
-  // 去除可能的引号
-  const cleanAccessKey = accessKeyId.replace(/^["']|["']$/g, '');
-  const cleanSecretKey = secretAccessKey.replace(/^["']|["']$/g, '');
+  // 检查是否有可用的密钥
+  if (!accessKeyId || !secretAccessKey) {
+    throw new Error('缺少即梦AI认证信息，请配置 API 密钥或设置环境变量 ACCESS_KEY_ID 和 SECRET_ACCESS_KEY');
+  }
 
-  console.log('🔑 直接使用API密钥字符串');
+  // 去除可能的引号和首尾空格
+  const cleanAccessKey = accessKeyId.trim().replace(/^["']|["']$/g, '');
+  const cleanSecretKey = secretAccessKey.trim().replace(/^["']|["']$/g, '');
+
+  console.log('🔑 创建即梦AI客户端');
   console.log('  AccessKey 长度:', cleanAccessKey.length);
   console.log('  SecretKey 长度:', cleanSecretKey.length);
+  console.log('  配置来源:', config?.accessKeyId ? '用户自定义' : '环境变量');
 
   return new JimengAIClient(cleanAccessKey, cleanSecretKey);
 }

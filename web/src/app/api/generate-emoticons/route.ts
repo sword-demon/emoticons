@@ -1,29 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createJimengClient } from '@/lib/jimeng-client';
+import { createJimengClient, JimengClientConfig } from '@/lib/jimeng-client';
 
 interface GenerateRequest {
-  subjectDescription: string;
-  keywords: string[];
+  subjectDescription: string; // 主体描述
+  keywords: string[]; // 关键词列表
   options?: {
-    style?: 'cartoon' | 'realistic' | 'anime' | 'cute';
-    size?: 'small' | 'medium' | 'large';
+    style?: 'cartoon' | 'realistic' | 'anime' | 'cute'; // 风格
+    size?: 'small' | 'medium' | 'large'; // 尺寸
     quantity?: number; // 允许自定义数量，不强制16个
-    quality?: 'draft' | 'standard' | 'high';
+    quality?: 'draft' | 'standard' | 'high'; // 质量
   };
 }
 
 interface EmoticonResult {
-  id: number;
-  keyword: string;
-  imageUrl: string;
-  imageData: string | null;
-  seed: number;
-  status: 'success' | 'failed' | 'placeholder';
-  errorMessage?: string;
+  id: number; // 表情包 ID
+  keyword: string; // 关键词
+  imageUrl: string; // 图片 URL
+  imageData: string | null; // 图片数据（base64）
+  seed: number; // 随机种子
+  status: 'success' | 'failed' | 'placeholder'; // 状态
+  errorMessage?: string; // 错误信息
 }
 
 // 环境变量控制是否使用真实API
 const USE_REAL_API = process.env.USE_REAL_JIMENG_API === 'true';
+
+// 从请求头获取用户自定义的 API 配置
+function getClientConfig(request: NextRequest): JimengClientConfig {
+  const accessKeyId = request.headers.get('X-Access-Key-Id'); // 用户自定义 Access Key
+  const secretAccessKey = request.headers.get('X-Secret-Access-Key'); // 用户自定义 Secret Key
+  
+  return {
+    accessKeyId: accessKeyId || undefined, // 如果为空则返回 undefined
+    secretAccessKey: secretAccessKey || undefined // 如果为空则返回 undefined
+  };
+}
 
 // 预设的安全关键词集合
 const PRESET_KEYWORDS = {
@@ -94,11 +105,21 @@ export async function POST(request: NextRequest) {
     let successCount = 0;
     let failedCount = 0;
 
-    if (USE_REAL_API) {
+    // 获取用户自定义的 API 配置
+    const clientConfig = getClientConfig(request);
+    const hasCustomConfig = !!(clientConfig.accessKeyId && clientConfig.secretAccessKey);
+
+    // 判断是否应该使用真实 API
+    // 1. 用户提供了自定义密钥，或者
+    // 2. 环境变量启用了真实 API
+    const shouldUseRealAPI = hasCustomConfig || USE_REAL_API;
+
+    if (shouldUseRealAPI) {
       // 使用真实的即梦AI API
       try {
         console.log('调用即梦AI API...');
-        const jimengClient = createJimengClient();
+        console.log('使用自定义密钥:', hasCustomConfig);
+        const jimengClient = createJimengClient(clientConfig); // 传入用户配置
 
         // 取前quantity个关键词进行生成
         const targetKeywords = keywords.slice(0, quantity);
@@ -188,7 +209,8 @@ export async function POST(request: NextRequest) {
         subjectDescription,
         totalKeywords: keywords.length,
         generated: quantity,
-        apiMode: USE_REAL_API ? 'real' : 'mock',
+        apiMode: shouldUseRealAPI ? 'real' : 'mock', // 使用实际判断结果
+        usingCustomKeys: hasCustomConfig, // 是否使用用户自定义密钥
         options: { style, size, quality },
         timestamp: new Date().toISOString()
       }
