@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Settings, CheckCircle, XCircle, Home, Eye, EyeOff, Save, Trash2, TestTube } from 'lucide-react';
+import { Settings, CheckCircle, XCircle, Home, Eye, EyeOff, Save, Trash2, TestTube, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 // 用户自定义配置接口
@@ -18,6 +18,8 @@ interface UserAPIConfig {
 const CONFIG_STORAGE_KEY = 'jimeng_api_config';
 
 export default function AdminPage() {
+  // 客户端挂载状态，用于避免 hydration mismatch
+  const [mounted, setMounted] = useState(false);
   // 表单状态
   const [accessKeyId, setAccessKeyId] = useState(''); // Access Key ID 输入值
   const [secretAccessKey, setSecretAccessKey] = useState(''); // Secret Access Key 输入值
@@ -30,9 +32,10 @@ export default function AdminPage() {
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null); // 测试结果
   const [saveMessage, setSaveMessage] = useState<string | null>(null); // 保存消息
 
-  // 页面加载时从 localStorage 读取配置
+  // 页面加载时设置挂载状态并从 localStorage 读取配置
   useEffect(() => {
-    loadConfig();
+    setMounted(true); // 标记客户端已挂载
+    loadConfig(); // 加载配置
   }, []);
 
   // 从 localStorage 加载配置
@@ -126,6 +129,49 @@ export default function AdminPage() {
 
   // 检查配置是否完整
   const isConfigComplete = accessKeyId.trim() !== '' && secretAccessKey.trim() !== '';
+
+  // 客户端未挂载时显示加载骨架屏，避免 hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4">
+        <div className="max-w-4xl mx-auto">
+          {/* Header skeleton */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-gray-200 rounded animate-pulse" />
+                <div className="h-9 w-48 bg-gray-200 rounded animate-pulse" />
+              </div>
+              <div className="h-10 w-24 bg-gray-200 rounded animate-pulse" />
+            </div>
+            <div className="h-5 w-80 bg-gray-200 rounded mt-2 animate-pulse" />
+          </div>
+          {/* Card skeleton */}
+          <div className="bg-white rounded-xl border p-6 mb-6">
+            <div className="flex items-center gap-2 mb-6">
+              <div className="w-5 h-5 bg-gray-200 rounded animate-pulse" />
+              <div className="h-6 w-32 bg-gray-200 rounded animate-pulse" />
+            </div>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                <div className="h-10 w-full bg-gray-200 rounded animate-pulse" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+                <div className="h-10 w-full bg-gray-200 rounded animate-pulse" />
+              </div>
+            </div>
+          </div>
+          {/* Loading indicator */}
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 text-indigo-600 animate-spin" />
+            <span className="ml-2 text-gray-600">加载配置中...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4">
